@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Dashboard from "./Dashboard";
 import LoginScreen from "./LoginScreen";
 
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:4000";
+const API = process.env.NODE_ENV === "production" ? "/api" : process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:4000";
 type User = { id:string; name:string; email:string; avatar:string|null };
 type Workspace = { id:string; name:string; inviteCode?:string; members:Array<{user:User;role:string}> };
 type Plan = { id:string; owner:{id:string;name:string;avatar:string|null}; topics:Array<{id:string;title:string;description:string|null;dayNumber:number|null;estimatedHours:number|null;status:string;difficulty:string;category:{name:string}|null}> };
