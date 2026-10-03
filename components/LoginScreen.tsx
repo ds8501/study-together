@@ -1,7 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { ArrowRight, BookOpen, Check, Sparkles } from "lucide-react";
+import { ArrowRight, BookOpen, Check, Flame, Sparkles } from "lucide-react";
+import ThemeToggle from "./ThemeToggle";
 
 type User = { id: string; name: string; email: string; avatar: string | null };
 type AuthResult = { user?: User; error?: string };
@@ -60,9 +61,13 @@ export default function LoginScreen({ api, onAuthenticated, error: initialError 
         </header>
 
         <div className="auth-form-wrap">
+          <div className="auth-mode-tabs" role="tablist" aria-label="Account access">
+            <button type="button" role="tab" aria-selected={mode === "login"} className={mode === "login" ? "selected" : ""} onClick={() => { setError(""); setMode("login"); }}>Sign in</button>
+            <button type="button" role="tab" aria-selected={mode === "register"} className={mode === "register" ? "selected" : ""} onClick={() => { setError(""); setMode("register"); }}>Create account</button>
+          </div>
           <span className="auth-kicker"><Sparkles size={13} /> YOUR NEXT CHAPTER STARTS HERE</span>
           <h1>{mode === "login" ? "Welcome back" : "Create your account"}</h1>
-          <p className="auth-subtitle">{mode === "login" ? "Pick up where you left off and keep your momentum going." : "Start your journey or join a friend’s workspace."}</p>
+          <p className="auth-subtitle">{mode === "login" ? "Pick up where you left off and keep your streak alive." : "Build a study rhythm with friends and your own learning roadmap."}</p>
 
           <form className="auth-form" onSubmit={submit}>
             {mode === "register" && <label className="auth-field"><span>Your name</span><input required autoComplete="name" value={name} onChange={event => setName(event.target.value)} placeholder="Full name" /></label>}
@@ -93,22 +98,22 @@ export default function LoginScreen({ api, onAuthenticated, error: initialError 
 
       <aside className="auth-showcase">
         <div className="auth-orb auth-orb-one" /><div className="auth-orb auth-orb-two" />
-        <div className="auth-showcase-top"><span className="auth-live-dot" /> A calmer way to make progress</div>
+        <div className="auth-showcase-top"><span className="auth-brand-lockup"><span className="auth-brand-mark"><Flame size={17}/></span><strong>StudyPulse</strong></span><ThemeToggle/></div>
         <div className="auth-showcase-content">
           <div className="auth-illustration" aria-hidden="true">
             <div className="auth-illustration-window"><span /><span /><span /></div>
             <div className="auth-book auth-book-one" /><div className="auth-book auth-book-two" /><div className="auth-plant"><i /><i /><i /><b /></div>
             <div className="auth-glass-card">
-              <div className="auth-glass-icon"><BookOpen size={19} /></div>
-              <div className="auth-glass-overline">YOUR LEARNING SPACE</div>
-              <h2>Master your roadmap<br />with friends.</h2>
-              <p>Stay focused on your goals and share the small wins along the way.</p>
-              <div className="auth-benefit"><span><Check size={12} /></span><div><strong>Make a plan</strong><small>Break big goals into clear next steps</small></div></div>
-              <div className="auth-benefit"><span className="mint"><Check size={12} /></span><div><strong>Keep your rhythm</strong><small>Track study sessions and celebrate progress</small></div></div>
+              <div className="auth-glass-icon"><Flame size={19} /></div>
+              <div className="auth-glass-overline">STUDY TOGETHER, GROW FASTER</div>
+              <h2>Your daily study<br />accountability engine.</h2>
+              <p>Build streaks, craft a personal roadmap, and watch your friends’ progress in real time.</p>
+              <div className="auth-benefit"><span><Flame size={13} /></span><div><strong>Daily streaks</strong><small>Build a steady habit, one session at a time</small></div></div>
+              <div className="auth-benefit"><span className="mint"><Check size={12} /></span><div><strong>Roadmaps &amp; friends</strong><small>Make a plan and grow together</small></div></div>
             </div>
             <div className="auth-floor" />
           </div>
-          <div className="auth-showcase-caption"><span>STUDY IN GOOD COMPANY</span><p>Your own path. A little more momentum.</p></div>
+          <div className="auth-showcase-caption"><span>SHOW UP. MAKE PROGRESS.</span><p>Your next study session starts here.</p></div>
         </div>
         <div className="auth-showcase-footer"><span>Plan thoughtfully</span><i /> <span>Learn steadily</span><i /> <span>Grow together</span></div>
       </aside>
