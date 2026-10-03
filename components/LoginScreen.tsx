@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { ArrowRight, BookOpen, Check, Flame, Sparkles } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 
@@ -16,6 +16,19 @@ export default function LoginScreen({ api, onAuthenticated, error: initialError 
   const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState(initialError ?? "");
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const authError = params.get("authError");
+    if (authError === "google") setError("Google sign-in could not be completed. Please try again or use email and password.");
+    else if (authError === "google_not_configured") setError("Google sign-in is not configured yet. Please use email and password.");
+    else if (authError === "google_email") setError("Use a Gmail or Google Workspace account, or sign in with email and password.");
+    if (authError) {
+      params.delete("authError");
+      const query = params.toString();
+      window.history.replaceState({}, "", `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`);
+    }
+  }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -68,6 +81,12 @@ export default function LoginScreen({ api, onAuthenticated, error: initialError 
           <span className="auth-kicker"><Sparkles size={13} /> YOUR NEXT CHAPTER STARTS HERE</span>
           <h1>{mode === "login" ? "Welcome back" : "Create your account"}</h1>
           <p className="auth-subtitle">{mode === "login" ? "Pick up where you left off and keep your streak alive." : "Build a study rhythm with friends and your own learning roadmap."}</p>
+
+          <a className="auth-google-button" href={`${api}/auth/google`} aria-label="Continue with Google">
+            <svg aria-hidden="true" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.9c-.58 2.96-2.26 5.48-4.76 7.18l7.72 5.99c4.5-4.16 7.12-10.28 7.12-17.64Z"/><path fill="#FBBC05" d="M10.53 28.59A14.4 14.4 0 0 1 9.75 24c0-1.59.27-3.13.76-4.59l-7.98-6.2A23.9 23.9 0 0 0 0 24c0 3.88.93 7.57 2.56 10.78l7.97-6.19Z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.9-5.81l-7.72-5.99c-2.14 1.44-4.88 2.3-8.18 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48Z"/></svg>
+            Continue with Google
+          </a>
+          <div className="auth-or-divider"><span>OR CONTINUE WITH EMAIL</span></div>
 
           <form className="auth-form" onSubmit={submit}>
             {mode === "register" && <label className="auth-field"><span>Your name</span><input required autoComplete="name" value={name} onChange={event => setName(event.target.value)} placeholder="Full name" /></label>}
