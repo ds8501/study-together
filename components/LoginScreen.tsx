@@ -1,11 +1,117 @@
 "use client";
-import { FormEvent, useState } from "react";
-import { ArrowRight, BookOpen, Sparkles } from "lucide-react";
 
-type User={id:string;name:string;email:string;avatar:string|null};
-export default function LoginScreen({api,onAuthenticated,error:initialError}:{api:string;onAuthenticated:(user:User)=>void;error?:string}){const [mode,setMode]=useState<"login"|"register">("login");const [name,setName]=useState("");const [email,setEmail]=useState("");const [password,setPassword]=useState("");const [workspaceName,setWorkspaceName]=useState("Study Room");const [inviteCode,setInviteCode]=useState("");const [error,setError]=useState(initialError??"");const [busy,setBusy]=useState(false);
- async function submit(e:FormEvent){e.preventDefault();setBusy(true);setError("");try{const path=mode==="login"?"/auth/login":"/auth/register";const body=mode==="login"?{email,password}:{name,email,password,...(inviteCode.trim()?{inviteCode:inviteCode.trim()}:{workspaceName})};const res=await fetch(`${api}${path}`,{method:"POST",credentials:"include",headers:{"content-type":"application/json"},body:JSON.stringify(body)});const result=await res.json();if(!res.ok)throw new Error(result.error??"Could not sign in");onAuthenticated(result.user);}catch(e){setError(e instanceof TypeError?`Cannot reach the API at ${api}. Start the backend first.`:e instanceof Error?e.message:"Could not connect to the study workspace API");}finally{setBusy(false);}}
- return <main style={{minHeight:"100vh",display:"grid",gridTemplateColumns:"1.1fr .9fr",background:"#fff"}}><section style={{background:"#11131b",color:"white",padding:"clamp(30px,7vw,100px)",display:"flex",flexDirection:"column",justifyContent:"space-between",minHeight:"100vh"}}><div style={{display:"flex",alignItems:"center",gap:11,fontWeight:800,fontFamily:"Manrope,sans-serif"}}><div style={{width:32,height:32,borderRadius:10,background:"#7359e8",display:"grid",placeItems:"center"}}><Sparkles size={17}/></div>study<span style={{color:"#a895ff",marginLeft:-10}}>together</span></div><div style={{maxWidth:490}}><div style={{fontSize:11,letterSpacing:1.5,textTransform:"uppercase",color:"#a99af4",fontWeight:700,marginBottom:18}}>A shared space for independent goals</div><h1 style={{font:"700 clamp(32px,5vw,58px)/1.12 Manrope,sans-serif",letterSpacing:-2.5,marginBottom:18}}>Make progress<br/>in good company.</h1><p style={{color:"#a0a2b0",fontSize:15,lineHeight:1.8,maxWidth:390}}>Follow your own learning path. See someone you care about making progress alongside you.</p><div style={{display:"flex",gap:20,marginTop:34,color:"#d4d1e3",fontSize:12}}><span style={{display:"flex",alignItems:"center",gap:7}}><BookOpen size={15} color="#ad99ff"/> Your own roadmap</span><span style={{display:"flex",alignItems:"center",gap:7}}><Sparkles size={15} color="#63c9a7"/> Shared momentum</span></div></div><div style={{fontSize:11,color:"#737686"}}>Your journey stays yours. Your progress is shared with your workspace.</div></section><section style={{display:"grid",placeItems:"center",padding:25}}><div style={{width:"min(390px,100%)"}}><div style={{marginBottom:27}}><div style={{font:"700 25px Manrope,sans-serif",letterSpacing:-.8,marginBottom:7}}>{mode==="login"?"Welcome back":"Create your account"}</div><div style={{fontSize:12,color:"#91939c"}}>{mode==="login"?"Pick up where your learning left off.":"Start your journey or join your friend’s workspace."}</div></div><form onSubmit={submit}>{mode==="register"&&<><label style={label}>Your name</label><input required autoComplete="name" value={name} onChange={e=>setName(e.target.value)} placeholder="Full name" style={input}/></>}<label style={label}>Email</label><input required type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" style={input}/><label style={label}>Password</label><input required type="password" minLength={mode==="register"?10:1} autoComplete={mode==="login"?"current-password":"new-password"} value={password} onChange={e=>setPassword(e.target.value)} placeholder={mode==="register"?"At least 10 characters":"Your password"} style={input}/>{mode==="register"&&<><label style={label}>Workspace invite code <span style={{fontWeight:400,color:"#999"}}>· optional</span></label><input value={inviteCode} onChange={e=>setInviteCode(e.target.value)} placeholder="Enter your friend’s code to join" style={input}/>{!inviteCode.trim()&&<><label style={label}>New workspace name</label><input required value={workspaceName} onChange={e=>setWorkspaceName(e.target.value)} placeholder="Study Room" style={input}/></>}</>}{error&&<div role="alert" style={{fontSize:11,color:"#c64444",background:"#fff2f1",borderRadius:8,padding:"10px 12px",margin:"12px 0"}}>{error}</div>}<button type="submit" disabled={busy} style={{width:"100%",marginTop:13,padding:"12px 15px",border:0,borderRadius:9,background:busy?"#a99af0":"#7158e7",color:"white",fontSize:12,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",gap:8,cursor:busy?"wait":"pointer"}}>{busy?"Please wait…":mode==="login"?"Sign in":"Create account"}{!busy&&<ArrowRight size={15}/>}</button></form><div style={{marginTop:19,textAlign:"center",fontSize:11,color:"#888a94"}}>{mode==="login"?"New to Study Together?":"Already have an account?"} <button onClick={()=>{setError("");setMode(mode==="login"?"register":"login")}} style={{border:0,background:"none",padding:0,color:"#6e54df",fontWeight:700,cursor:"pointer"}}>{mode==="login"?"Create an account":"Sign in"}</button></div>{mode==="register"&&<p style={{fontSize:10,color:"#a0a1aa",lineHeight:1.6,textAlign:"center",marginTop:18}}>The workspace owner can copy the invite code from the dashboard and send it to you.</p>}</div></section><style jsx>{`@media(max-width:760px){main{grid-template-columns:1fr!important}main>section:first-child{display:none!important}}`}</style></main>
+import { FormEvent, useState } from "react";
+import { ArrowRight, BookOpen, Check, Sparkles } from "lucide-react";
+
+type User = { id: string; name: string; email: string; avatar: string | null };
+type AuthResult = { user?: User; error?: string };
+
+export default function LoginScreen({ api, onAuthenticated, error: initialError }: { api: string; onAuthenticated: (user: User) => void; error?: string }) {
+  const [mode, setMode] = useState<"login" | "register">("login");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [workspaceName, setWorkspaceName] = useState("Study Room");
+  const [inviteCode, setInviteCode] = useState("");
+  const [error, setError] = useState(initialError ?? "");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      const registering = mode === "register";
+      const body = registering
+        ? { name, email, password, ...(inviteCode.trim() ? { inviteCode: inviteCode.trim() } : { workspaceName }) }
+        : { email, password };
+      const response = await fetch(`${api}${registering ? "/auth/register" : "/auth/login"}`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const responseText = await response.text();
+      let result: AuthResult;
+      try {
+        result = JSON.parse(responseText) as AuthResult;
+      } catch {
+        throw new Error(`The server returned an unexpected response (${response.status}). Please try again shortly.`);
+      }
+      if (!response.ok) throw new Error(result.error ?? "Could not sign in");
+      if (!result.user) throw new Error("The server response did not include your account. Please try again.");
+      onAuthenticated(result.user);
+    } catch (cause) {
+      setError(cause instanceof TypeError ? `Cannot reach the API at ${api}. Please try again shortly.` : cause instanceof Error ? cause.message : "Could not connect to the study workspace API");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <main className="auth-page">
+      <section className="auth-form-panel">
+        <header className="auth-header">
+          <a className="auth-brand" href="/" aria-label="Study Together home">
+            <span className="auth-brand-mark"><BookOpen size={17} strokeWidth={2.4} /></span>
+            <span>Study<span>Together</span></span>
+          </a>
+          <span className="auth-header-note">LEARN AT YOUR PACE</span>
+        </header>
+
+        <div className="auth-form-wrap">
+          <span className="auth-kicker"><Sparkles size={13} /> YOUR NEXT CHAPTER STARTS HERE</span>
+          <h1>{mode === "login" ? "Welcome back" : "Create your account"}</h1>
+          <p className="auth-subtitle">{mode === "login" ? "Pick up where you left off and keep your momentum going." : "Start your journey or join a friend’s workspace."}</p>
+
+          <form className="auth-form" onSubmit={submit}>
+            {mode === "register" && <label className="auth-field"><span>Your name</span><input required autoComplete="name" value={name} onChange={event => setName(event.target.value)} placeholder="Full name" /></label>}
+            <label className="auth-field"><span>Email address</span><input required type="email" autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} placeholder="name@example.com" /></label>
+            <label className="auth-field"><span>Password</span><input required type="password" minLength={mode === "register" ? 10 : 1} autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={event => setPassword(event.target.value)} placeholder={mode === "register" ? "At least 10 characters" : "Enter your password"} /></label>
+            {mode === "register" && <>
+              <label className="auth-field"><span>Workspace invite code <em>· optional</em></span><input value={inviteCode} onChange={event => setInviteCode(event.target.value)} placeholder="Enter your friend’s code to join" /></label>
+              {!inviteCode.trim() && <label className="auth-field"><span>New workspace name</span><input required value={workspaceName} onChange={event => setWorkspaceName(event.target.value)} placeholder="Study Room" /></label>}
+            </>}
+            {error && <div className="auth-error" role="alert">{error}</div>}
+            <button className="auth-submit" type="submit" disabled={busy}>
+              <span>{busy ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}</span>
+              {!busy && <ArrowRight size={17} />}
+            </button>
+          </form>
+
+          <p className="auth-switch">
+            {mode === "login" ? "New to Study Together?" : "Already have an account?"}
+            <button type="button" onClick={() => { setError(""); setMode(mode === "login" ? "register" : "login"); }}>
+              {mode === "login" ? "Create an account" : "Sign in"}
+            </button>
+          </p>
+          {mode === "register" && !inviteCode.trim() && <p className="auth-invite-hint">Your friend can share their workspace invite code from Settings.</p>}
+        </div>
+
+        <footer className="auth-footer">A little progress, made consistently.</footer>
+      </section>
+
+      <aside className="auth-showcase">
+        <div className="auth-orb auth-orb-one" /><div className="auth-orb auth-orb-two" />
+        <div className="auth-showcase-top"><span className="auth-live-dot" /> A calmer way to make progress</div>
+        <div className="auth-showcase-content">
+          <div className="auth-illustration" aria-hidden="true">
+            <div className="auth-illustration-window"><span /><span /><span /></div>
+            <div className="auth-book auth-book-one" /><div className="auth-book auth-book-two" /><div className="auth-plant"><i /><i /><i /><b /></div>
+            <div className="auth-glass-card">
+              <div className="auth-glass-icon"><BookOpen size={19} /></div>
+              <div className="auth-glass-overline">YOUR LEARNING SPACE</div>
+              <h2>Master your roadmap<br />with friends.</h2>
+              <p>Stay focused on your goals and share the small wins along the way.</p>
+              <div className="auth-benefit"><span><Check size={12} /></span><div><strong>Make a plan</strong><small>Break big goals into clear next steps</small></div></div>
+              <div className="auth-benefit"><span className="mint"><Check size={12} /></span><div><strong>Keep your rhythm</strong><small>Track study sessions and celebrate progress</small></div></div>
+            </div>
+            <div className="auth-floor" />
+          </div>
+          <div className="auth-showcase-caption"><span>STUDY IN GOOD COMPANY</span><p>Your own path. A little more momentum.</p></div>
+        </div>
+        <div className="auth-showcase-footer"><span>Plan thoughtfully</span><i /> <span>Learn steadily</span><i /> <span>Grow together</span></div>
+      </aside>
+    </main>
+  );
 }
-const label:React.CSSProperties={display:"block",fontSize:11,fontWeight:700,color:"#53555e",margin:"13px 0 6px"};
-const input:React.CSSProperties={display:"block",width:"100%",border:"1px solid #e6e6ec",borderRadius:8,padding:"11px 12px",fontSize:12,outlineColor:"#7459e8",background:"white"};
