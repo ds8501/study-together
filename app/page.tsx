@@ -1,2 +1,5 @@
-import StudyTogetherApp from "@/components/StudyTogetherApp";
-export default function Page() { return <StudyTogetherApp />; }
+import LandingPage from "@/components/LandingPage";
+
+export default function Page() {
+  return <LandingPage />;
+}
