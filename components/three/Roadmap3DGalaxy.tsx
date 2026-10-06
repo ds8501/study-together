@@ -6,7 +6,7 @@ import { Suspense, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 type Topic = {
-  id?: string;
+  id?: string | number;
   title: string;
   category: string;
   status: "Completed" | "In progress" | "Not started";

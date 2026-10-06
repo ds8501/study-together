@@ -16,7 +16,7 @@ import Settings3DIdentity from "./three/Settings3DIdentity";
 type Status = "Completed" | "In progress" | "Not started";
 export type MonthDay = { key: string; dayNumber: number; dayOfWeek: string; active: boolean; today: boolean; future: boolean };
 export type StudyStats = { currentStreak: number; bestStreak: number; totalDaysStudiedThisMonth?: number; monthName?: string; year?: number; month?: MonthDay[]; week: Array<{ key: string; label: string; active: boolean; today: boolean }> };
-type Topic = { id?:string; title:string; category:string; status:Status; difficulty:string; hours:number; day:number; owner:"Divya"|"Alex"; description:string };
+type Topic = { id?: string | number; title: string; category: string; status: Status; difficulty: string; hours: number; day: number; owner: "Divya" | "Alex"; description: string };
 const initialTopics:Topic[] = [
  {id:"topic-1",title:"HLD: Event-driven architecture",category:"System Design",status:"Completed",difficulty:"Advanced",hours:2,day:1,owner:"Divya",description:"Explore event-driven systems, message brokers, and delivery guarantees through a practical architecture exercise."},
  {id:"topic-2",title:"Kafka consumer groups",category:"System Design",status:"Completed",difficulty:"Medium",hours:2,day:2,owner:"Divya",description:"Understand partition assignment, consumer coordination, offsets, and how groups scale across a service."},
@@ -64,10 +64,16 @@ function Roadmap({topics,onSelect,onAdd,onStatus,onDelete}:{topics:Topic[];onSel
   const toggleDay=(day:number)=>setExpandedDays(old=>{const next=new Set(old);next.has(day)?next.delete(day):next.add(day);return next});
   const toggleDone=async(topic:Topic)=>{
     if(!topic.id)return;
-    setSavingId(topic.id);setSaveError("");
-    const ok=await onStatus({...topic,status:topic.status==="Completed"?"Not started":"Completed"});
-    if(!ok)setSaveError("Could not save that update. Please try again.");
-    setSavingId(null);
+    const tid = String(topic.id);
+    setSavingId(tid);setSaveError("");
+    try {
+      const ok=await onStatus({...topic,status:topic.status==="Completed"?"Not started":"Completed"});
+      if(!ok)setSaveError("Could not save that update. Please try again.");
+    } catch {
+      setSaveError("Could not save that update. Please try again.");
+    } finally {
+      setSavingId(null);
+    }
   };
   return <>
     <div className="page-heading roadmap-heading"><div><div className="eyebrow">Owned by you · {mine.length} topics</div><h1>My roadmap</h1><p className="subheading">A clear, day-by-day checklist for your learning plan.</p></div><button className="button-primary" onClick={()=>onAdd()}><Plus size={15}/> Add a topic</button></div>
@@ -75,17 +81,17 @@ function Roadmap({topics,onSelect,onAdd,onStatus,onDelete}:{topics:Topic[];onSel
     <Roadmap3DGalaxy topics={topics} onSelect={onSelect} />
     <div className="roadmap-toolbar"><label className="roadmap-search"><Search size={15}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Find a topic or question" aria-label="Search roadmap"/></label><select className="roadmap-category-select" aria-label="Filter by category" value={categoryFilter} onChange={e=>setCategoryFilter(e.target.value)}><option value="All">All categories</option>{categories.map(category=><option key={category} value={category}>{category}</option>)}</select><div className="roadmap-filters">{(["All","To do","Done"] as const).map(item=><button key={item} className={`roadmap-filter ${filter===item?"selected":""}`} onClick={()=>setFilter(item)}>{item}</button>)}</div></div>
     {saveError&&<div className="roadmap-save-error" role="alert">{saveError}</div>}
-    <div className="roadmap-days">{days.map(day=>{const dayTopics=filtered.filter(t=>t.day===day);const dayDone=dayTopics.filter(t=>t.status==="Completed").length;const expanded=expandedDays.has(day)||Boolean(query);const dayCategories=Array.from(new Set(dayTopics.map(t=>t.category)));return <section className={`roadmap-day ${dayDone===dayTopics.length?"day-complete":""}`} key={day}><div className="roadmap-day-header"><button className="roadmap-day-toggle" onClick={()=>toggleDay(day)} aria-expanded={expanded}><span className="roadmap-day-number">{dayDone===dayTopics.length&&dayTopics.length>0?<Check size={15}/>:String(day).padStart(2,"0")}</span><span className="roadmap-day-title"><strong>Day {day}</strong><small>{dayDone===dayTopics.length&&dayTopics.length>0?"Day complete":"Keep moving at your own pace"}</small></span><span className="roadmap-day-count">{dayDone}/{dayTopics.length} done</span><span className="roadmap-day-chevron"><ChevronDown size={16}/></span></button><button className="roadmap-day-add" onClick={()=>onAdd(day)} aria-label={`Add a topic or question to Day ${day}`} title="Add to this day"><Plus size={14}/></button></div>{expanded&&<div className="roadmap-day-content">{dayCategories.map(category=><div className="roadmap-topic-group" key={`${day}-${category}`}><h3>{category}</h3>{dayTopics.filter(t=>t.category===category).map(topic=>{const done=topic.status==="Completed";return <div className={`roadmap-topic-row ${done?"topic-done":""}`} key={topic.id??topic.title}><button type="button" className="roadmap-checkbox" role="checkbox" aria-checked={done} aria-label={`${done?"Mark as not done":"Mark as done"}: ${topic.title}`} disabled={savingId===topic.id} onClick={()=>void toggleDone(topic)}>{done&&<Check size={13}/>}</button><button type="button" className="roadmap-topic-title" onClick={()=>onSelect(topic)}><span>{topic.title}</span><small>{topic.status}{topic.hours?` · ${topic.hours}h`:""}</small></button><button type="button" className="roadmap-delete" aria-label={`Delete ${topic.title}`} title="Delete topic" onClick={()=>onDelete(topic)}><Trash2 size={14}/></button></div>})}</div>)}</div>}</section>})}{days.length===0&&<div className="roadmap-empty">No topics match those filters.</div>}</div>
+    <div className="roadmap-days">{days.map(day=>{const dayTopics=filtered.filter(t=>t.day===day);const dayDone=dayTopics.filter(t=>t.status==="Completed").length;const expanded=expandedDays.has(day)||Boolean(query);const dayCategories=Array.from(new Set(dayTopics.map(t=>t.category)));return <section className={`roadmap-day ${dayDone===dayTopics.length?"day-complete":""}`} key={day}><div className="roadmap-day-header"><button className="roadmap-day-toggle" onClick={()=>toggleDay(day)} aria-expanded={expanded}><span className="roadmap-day-number">{dayDone===dayTopics.length&&dayTopics.length>0?<Check size={15}/>:String(day).padStart(2,"0")}</span><span className="roadmap-day-title"><strong>Day {day}</strong><small>{dayDone===dayTopics.length&&dayTopics.length>0?"Day complete":"Keep moving at your own pace"}</small></span><span className="roadmap-day-count">{dayDone}/{dayTopics.length} done</span><span className="roadmap-day-chevron"><ChevronDown size={16}/></span></button><button className="roadmap-day-add" onClick={()=>onAdd(day)} aria-label={`Add a topic or question to Day ${day}`} title="Add to this day"><Plus size={14}/></button></div>{expanded&&<div className="roadmap-day-content">{dayCategories.map(category=><div className="roadmap-topic-group" key={`${day}-${category}`}><h3>{category}</h3>{dayTopics.filter(t=>t.category===category).map(topic=>{const done=topic.status==="Completed";return <div className={`roadmap-topic-row ${done?"topic-done":""}`} key={topic.id??topic.title}><button type="button" className="roadmap-checkbox" role="checkbox" aria-checked={done} aria-label={`${done?"Mark as not done":"Mark as done"}: ${topic.title}`} disabled={savingId===String(topic.id)} onClick={()=>void toggleDone(topic)}>{done&&<Check size={13}/>}</button><button type="button" className="roadmap-topic-title" onClick={()=>onSelect(topic)}><span>{topic.title}</span><small>{topic.status}{topic.hours?` · ${topic.hours}h`:""}</small></button><button type="button" className="roadmap-delete" aria-label={`Delete ${topic.title}`} title="Delete topic" onClick={()=>onDelete(topic)}><Trash2 size={14}/></button></div>})}</div>)}</div>}</section>})}{days.length===0&&<div className="roadmap-empty">No topics match those filters.</div>}</div>
   </>;
 }
 function StudyRoom({topics,onLog}:{topics:Topic[];onLog:(topic:Topic,minutes:number)=>Promise<boolean>}) {
-  const mine=topics.filter(topic=>topic.owner==="Divya"&&topic.id);
+  const mine=topics.filter(topic=>(topic.owner==="Divya"||!topic.owner)&&topic.id);
   const [topicId,setTopicId]=useState(mine.find(topic=>topic.status!=="Completed")?.id??mine[0]?.id??"");
   const [minutes,setMinutes]=useState(25),[remaining,setRemaining]=useState(1500),[running,setRunning]=useState(false),[saving,setSaving]=useState(false),[message,setMessage]=useState("");
   useEffect(()=>{if(!running)return;const timer=window.setInterval(()=>setRemaining(value=>Math.max(0,value-1)),1000);return()=>window.clearInterval(timer);},[running]);
   useEffect(()=>{if(remaining===0)setRunning(false);},[remaining]);
   const setPreset=(value:number)=>{setMinutes(value);setRemaining(value*60);setRunning(false);setMessage("");};
-  const save=async()=>{const topic=mine.find(item=>item.id===topicId);if(!topic)return;setSaving(true);const studied=Math.max(1,Math.ceil((minutes*60-remaining)/60));const ok=await onLog(topic,studied);setMessage(ok?"Session saved. Your streak is up to date.":"Could not save the session. Please try again.");setSaving(false);if(ok){setRunning(false);setRemaining(minutes*60);}};
+  const save=async()=>{const topic=mine.find(item=>String(item.id)===String(topicId));if(!topic)return;setSaving(true);const studied=Math.max(1,Math.ceil((minutes*60-remaining)/60));const ok=await onLog(topic,studied);setMessage(ok?"Session saved. Your streak is up to date.":"Could not save the session. Please try again.");setSaving(false);if(ok){setRunning(false);setRemaining(minutes*60);}};
   const clock=`${String(Math.floor(remaining/60)).padStart(2,"0")}:${String(remaining%60).padStart(2,"0")}`;
   return <div className="focus-page"><div className="page-heading"><div><div className="eyebrow">STUDY ROOM</div><h1>Focus mode</h1><p className="subheading">Set a goal, start the timer, and let the clock keep you honest.</p></div></div><div style={{marginBottom:20}}><StudyRoom3DDesk running={running} remaining={remaining} minutes={minutes} topicTitle={mine.find(item=>item.id===topicId)?.title}/></div><div className="focus-grid"><section className="focus-card"><label className="focus-topic-label">What are you working on?</label><select value={topicId} onChange={event=>setTopicId(event.target.value)}><option value="">Choose a roadmap topic</option>{mine.map(topic=><option key={topic.id} value={topic.id}>{topic.title}</option>)}</select><div className="focus-clock"><strong>{clock}</strong><span>{running?"FOCUSING":remaining===0?"SESSION COMPLETE":"READY"}</span></div><div className="focus-controls"><button className="button-primary" onClick={()=>{if(remaining===0)setRemaining(minutes*60);setRunning(value=>!value)}}>{running?<Pause size={16}/>:<Play size={16}/>}{running?"Pause":"Start"}</button><button className="button-secondary" onClick={()=>{setRunning(false);setRemaining(minutes*60);setMessage("")}}><RotateCcw size={15}/>Reset</button></div><div className="focus-presets">{[{label:"Pomodoro · 25m",value:25},{label:"Short break · 5m",value:5},{label:"Deep focus · 50m",value:50},{label:"Sprint · 15m",value:15}].map(preset=><button key={preset.value} className={minutes===preset.value?"selected":""} onClick={()=>setPreset(preset.value)}>{preset.label}</button>)}</div><button className="focus-save" disabled={!topicId||saving||running||remaining===minutes*60} onClick={()=>void save()}>{saving?"Saving session…":"Save focused session"}</button>{!mine.length&&<p className="focus-message">Add a topic to your roadmap to log a focus session.</p>}{message&&<p className="focus-message" role="status">{message}</p>}</section><aside className="focus-side"><section className="focus-card"><span className="focus-side-label">THIS SESSION</span><strong><Timer size={19}/>{remaining===0?"Ready to save":"Focus on one task"}</strong><p>Select a roadmap topic above, then log your session to update your streak.</p></section><section className="focus-card focus-premium-card" aria-label="Vibes, premium feature coming soon" aria-disabled="true"><span className="focus-side-label"><Music2 size={14}/> VIBES <span className="premium-lock"><LockKeyhole size={12}/> PREMIUM · COMING SOON</span></span><p>Playlist integrations are part of StudyPulse Premium and will be available later.</p><div className="focus-tags"><span>Lofi</span><span>Rain</span><span>Coffee shop</span><span>Forest</span></div></section><section className="focus-card"><span className="focus-side-label">A SMALL TIP</span><p>Pair a Pomodoro with a specific sub-task from your roadmap. Mark it done after the timer to keep your momentum going.</p></section></aside></div></div>;
 }
@@ -198,6 +204,16 @@ export default function Dashboard({
   useEffect(() => {
     if (providedTopics && providedTopics.length > 0) {
       setTopics(providedTopics);
+    } else if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("studypulse_topics");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setTopics(parsed);
+          }
+        }
+      } catch {}
     }
   }, [providedTopics]);
 
@@ -224,9 +240,36 @@ export default function Dashboard({
   }, [inviteCode]);
 
   const handleStatus = async (next: Topic) => {
-    if (next.id && !next.id.startsWith("topic-")) {
+    const idStr = next.id != null ? String(next.id) : "";
+    const isMock = !idStr || idStr.startsWith("topic-");
+
+    // 1. Optimistic state update immediately
+    setTopics(old => {
+      const updated = old.map(t => {
+        const matches = idStr ? String(t.id) === idStr : t.title === next.title;
+        return matches ? { ...t, ...next, id: t.id ?? next.id } : t;
+      });
       try {
-        const response = await fetch(`${api}/topics/${next.id}`, {
+        localStorage.setItem("studypulse_topics", JSON.stringify(updated));
+      } catch {}
+      return updated;
+    });
+
+    setSelected(current => {
+      if (!current) return null;
+      const matches = idStr ? String(current.id) === idStr : current.title === next.title;
+      return matches ? { ...current, ...next, id: current.id ?? next.id } : current;
+    });
+
+    // 2. Increment / update streak if marked complete
+    if (next.status === "Completed") {
+      void logStudySession(next, 25);
+    }
+
+    // 3. Remote sync to backend if real topic and authenticated
+    if (!isMock && isAuthenticated) {
+      try {
+        const response = await fetch(`${api}/topics/${idStr}`, {
           method: "PATCH",
           credentials: "include",
           headers: { "content-type": "application/json" },
@@ -234,30 +277,30 @@ export default function Dashboard({
             status: next.status === "Completed" ? "COMPLETED" : next.status === "In progress" ? "IN_PROGRESS" : "NOT_STARTED"
           })
         });
-        if (!response.ok) return false;
-      } catch {
-        return false;
+        if (!response.ok) {
+          console.warn("Backend topic update returned status:", response.status);
+        }
+      } catch (err) {
+        console.warn("Could not sync topic with server:", err);
       }
     }
-    setTopics(old => old.map(t => ((next.id ? t.id === next.id : t.title === next.title) ? next : t)));
-    setSelected(current => (current?.id === next.id ? next : current));
 
-    if (next.status === "Completed") {
-      void logStudySession(next, 25);
-    }
     return true;
   };
 
   const logStudySession = async (topic: Topic, minutes: number) => {
     let savedStats: StudyStats | null = null;
-    if (topic.id && !topic.id.startsWith("topic-")) {
+    const idStr = topic.id != null ? String(topic.id) : "";
+    const isMock = !idStr || idStr.startsWith("topic-");
+
+    if (!isMock && isAuthenticated) {
       try {
         const response = await fetch(api + "/study-sessions", {
           method: "POST",
           credentials: "include",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
-            topicId: topic.id,
+            topicId: idStr,
             durationMinutes: minutes,
             timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
           })
@@ -301,15 +344,23 @@ export default function Dashboard({
   };
 
   const deleteTopic = async (topic: Topic) => {
-    if (!topic.id || topic.owner !== "Divya" || !window.confirm("Delete " + topic.title + " from your roadmap? This cannot be undone.")) return;
-    const response = await fetch(api + "/topics/" + topic.id, {
-      method: "DELETE",
-      credentials: "include"
-    });
-    if (response.ok) {
-      setTopics(old => old.filter(t => t.id !== topic.id));
-      setSelected(null);
+    const idStr = topic.id != null ? String(topic.id) : "";
+    if (!idStr || (topic.owner && topic.owner !== "Divya") || !window.confirm("Delete " + topic.title + " from your roadmap? This cannot be undone.")) return;
+    const isMock = idStr.startsWith("topic-");
+    if (!isMock && isAuthenticated) {
+      try {
+        await fetch(api + "/topics/" + idStr, {
+          method: "DELETE",
+          credentials: "include"
+        });
+      } catch {}
     }
+    setTopics(old => {
+      const updated = old.filter(t => String(t.id) !== idStr);
+      try { localStorage.setItem("studypulse_topics", JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+    setSelected(null);
   };
 
   const rotateInvite = async () => {
@@ -332,33 +383,44 @@ export default function Dashboard({
   };
 
   const addTopic = async () => {
-    if (!newTitle.trim() || !planId) return;
-    const res = await fetch(`${api}/study-plans/${planId}/topics`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        title: newTitle.trim(),
-        categoryName: newCategory,
-        dayNumber: newDay,
-        difficulty: "MEDIUM",
-        estimatedHours: 1.5
-      })
-    });
-    const result = await res.json();
-    if (!res.ok) return;
+    if (!newTitle.trim()) return;
+    let createdId: string = `topic-${Date.now()}`;
+    if (planId && isAuthenticated) {
+      try {
+        const res = await fetch(`${api}/study-plans/${planId}/topics`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            title: newTitle.trim(),
+            categoryName: newCategory,
+            dayNumber: newDay,
+            difficulty: "MEDIUM",
+            estimatedHours: 1.5
+          })
+        });
+        if (res.ok) {
+          const result = await res.json();
+          if (result.topic?.id != null) createdId = String(result.topic.id);
+        }
+      } catch {}
+    }
     const created: Topic = {
-      id: result.topic.id,
-      title: result.topic.title,
+      id: createdId,
+      title: newTitle.trim(),
       category: newCategory,
       status: "Not started",
       difficulty: "Medium",
       hours: 1.5,
-      day: result.topic.dayNumber ?? newDay,
+      day: newDay,
       owner: "Divya",
       description: "A new learning milestone in your personal roadmap."
     };
-    setTopics(old => [...old, created]);
+    setTopics(old => {
+      const updated = [...old, created];
+      try { localStorage.setItem("studypulse_topics", JSON.stringify(updated)); } catch {}
+      return updated;
+    });
     setNewTitle("");
     setShowAdd(false);
   };

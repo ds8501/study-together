@@ -7,7 +7,7 @@ import LoginScreen from "./LoginScreen";
 const API = process.env.NODE_ENV === "production" ? "/api" : process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:4000";
 type User = { id: string | number; name: string; email: string; avatar: string | null };
 type Workspace = { id: string | number; name: string; inviteCode?: string; members: Array<{ user: User; role: string }> };
-type Plan = { id: string | number; owner: { id: string | number; name: string; avatar: string | null }; topics: Array<{ id: string; title: string; description: string | null; dayNumber: number | null; estimatedHours: number | null; status: string; difficulty: string; category: { name: string } | null }> };
+type Plan = { id: string | number; owner: { id: string | number; name: string; avatar: string | null }; topics: Array<{ id: string | number; title: string; description: string | null; dayNumber: number | null; estimatedHours: number | null; status: string; difficulty: string; category: { name: string } | null }> };
 export type MonthDay = { key: string; dayNumber: number; dayOfWeek: string; active: boolean; today: boolean; future: boolean };
 export type StudyStats = { currentStreak: number; bestStreak: number; totalDaysStudiedThisMonth?: number; monthName?: string; year?: number; month?: MonthDay[]; week: Array<{ key: string; label: string; active: boolean; today: boolean }> };
 type SessionData = { user: User; workspace: Workspace; plans: Plan[]; stats: StudyStats };
@@ -77,7 +77,7 @@ export default function StudyTogetherApp(){
 
   const topics = data ? [
     ...(currentPlan?.topics ?? []).map(t => ({
-      id: t.id,
+      id: String(t.id),
       title: t.title,
       category: t.category?.name ?? "General",
       status: (t.status === "COMPLETED" ? "Completed" : t.status === "IN_PROGRESS" ? "In progress" : "Not started") as "Completed" | "In progress" | "Not started",
@@ -88,7 +88,7 @@ export default function StudyTogetherApp(){
       description: t.description ?? "A learning milestone on your personal roadmap."
     })),
     ...(friendPlan?.topics ?? []).map(t => ({
-      id: t.id,
+      id: String(t.id),
       title: t.title,
       category: t.category?.name ?? "General",
       status: (t.status === "COMPLETED" ? "Completed" : t.status === "IN_PROGRESS" ? "In progress" : "Not started") as "Completed" | "In progress" | "Not started",

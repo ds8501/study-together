@@ -5,7 +5,7 @@ import { useState, type CSSProperties } from "react";
 import Dashboard3DCore from "./three/Dashboard3DCore";
 
 type Topic = {
-  id?: string;
+  id?: string | number;
   title: string;
   category: string;
   status: "Completed" | "In progress" | "Not started";
@@ -111,7 +111,7 @@ export default function RoadmapDashboard({ topics, onSelect, onStatus, onAdd, cu
   const [savingId, setSavingId] = useState<string | null>(null);
   const [saveError, setSaveError] = useState("");
   const monthData = getMonthCalendarData(streak);
-  const mine = topics.filter(topic => topic.owner === "Divya").sort((a, b) => a.day - b.day);
+  const mine = topics.filter(topic => topic.owner === "Divya" || !topic.owner).sort((a, b) => a.day - b.day);
   const topicsByDay = mine.reduce<Array<{ day: number; topics: Topic[] }>>((days, topic) => {
     const group = days[days.length - 1];
     if (group?.day === topic.day) group.topics.push(topic);
@@ -129,11 +129,17 @@ export default function RoadmapDashboard({ topics, onSelect, onStatus, onAdd, cu
   const currentIndex = activeIndex >= 0 ? activeIndex : mine.findIndex(topic => topic.status !== "Completed");
   const toggleComplete = async (topic: Topic) => {
     if (!topic.id || savingId) return;
-    setSavingId(topic.id);
+    const tid = String(topic.id);
+    setSavingId(tid);
     setSaveError("");
-    const saved = await onStatus({ ...topic, status: topic.status === "Completed" ? "Not started" : "Completed" });
-    if (!saved) setSaveError("Could not save that update. Please try again.");
-    setSavingId(null);
+    try {
+      const saved = await onStatus({ ...topic, status: topic.status === "Completed" ? "Not started" : "Completed" });
+      if (!saved) setSaveError("Could not save that update. Please try again.");
+    } catch {
+      setSaveError("Could not save that update. Please try again.");
+    } finally {
+      setSavingId(null);
+    }
   };
 
   return (
@@ -186,7 +192,7 @@ export default function RoadmapDashboard({ topics, onSelect, onStatus, onAdd, cu
                         const current = !done && index === currentIndex;
                         return (
                           <div className={`sync-timeline-row ${done ? "is-done" : ""} ${current ? "is-current" : ""}`} key={topic.id ?? `${topic.day}-${topic.title}`}>
-                            <button type="button" className="sync-quick-check" role="checkbox" aria-checked={done} aria-label={`${done ? "Mark as not done" : "Mark as done"}: ${topic.title}`} disabled={!topic.id || savingId === topic.id} onClick={() => void toggleComplete(topic)}>{done && <Check size={12} />}</button>
+                            <button type="button" className="sync-quick-check" role="checkbox" aria-checked={done} aria-label={`${done ? "Mark as not done" : "Mark as done"}: ${topic.title}`} disabled={!topic.id || savingId === String(topic.id)} onClick={() => void toggleComplete(topic)}>{done && <Check size={12} />}</button>
                             <span className="sync-timeline-rail"><span className="sync-timeline-node">{done ? <Check size={15} /> : current ? <BookOpen size={14} /> : <span>{String(index + 1).padStart(2, "0")}</span>}</span></span>
                             <button type="button" className="sync-topic-content sync-topic-open" onClick={() => onSelect(topic)}><span className="sync-topic-title">{topic.title}{current && <span className="sync-live-tag">CURRENT</span>}</span><span className="sync-topic-subtitle">{topic.category}</span></button>
                             <span className={`sync-topic-status ${done ? "done" : current ? "current" : "upcoming"}`}>{done ? "Done" : current ? "In progress" : "Upcoming"}</span>
