@@ -189,6 +189,25 @@ h1,h2,h3,p {margin-top:0;} h1 {font:700 28px Manrope,sans-serif;letter-spacing:-
 .sync-week-best{display:flex;width:100%;justify-content:space-between;padding-top:12px;border-top:1px solid #ffffff30;color:#e4e1ff;font-size:9px}
 .sync-week-best strong{color:white}
 
+/* Monthly streak calendar */
+.sync-month-header{display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:12px}
+.sync-month-title{font-size:10px;font-weight:800;letter-spacing:.1em;color:#dedbff;text-transform:uppercase}
+.sync-month-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;background:#ffffff20;font-size:9px;font-weight:700;color:#fff}
+.sync-month-calendar{width:100%;margin:10px 0 14px}
+.sync-month-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;text-align:center;font-size:9px;font-weight:700;color:#ffffff99}
+.sync-month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.sync-month-cell{position:relative;display:grid;place-items:center;height:24px;border-radius:6px;font-size:9px;font-weight:600;color:#dedbff;background:#ffffff10;transition:all .18s ease;cursor:default}
+.sync-month-cell:hover{transform:scale(1.08);z-index:2}
+.sync-month-cell.active{background:#fff;color:#5144e8;font-weight:800;box-shadow:0 0 10px #ffffff99}
+.sync-month-cell.today{outline:2px solid #ffd166;outline-offset:1px}
+.sync-month-cell.today.active{background:#ffd166;color:#1c1917}
+.sync-month-cell.future{opacity:.4;background:#ffffff08}
+.sync-month-cell.empty{background:transparent}
+.sync-month-footer{display:flex;flex-direction:column;gap:8px;width:100%;padding-top:12px;border-top:1px solid #ffffff30;font-size:9px;color:#e4e1ff}
+.sync-month-stats-row{display:flex;justify-content:space-between;align-items:center;width:100%}
+.sync-month-progress{width:100%;height:4px;background:#ffffff20;border-radius:4px;overflow:hidden}
+.sync-month-progress-fill{height:100%;background:#ffd166;border-radius:4px;transition:width .3s ease}
+
 /* Split login and registration */
 .auth-page{display:grid;min-height:100vh;grid-template-columns:minmax(390px,.76fr) minmax(0,1.24fr);background:#fff}
 .auth-form-panel{display:flex;min-height:100vh;flex-direction:column;padding:35px clamp(30px,5.1vw,78px) 25px}
@@ -261,10 +280,11 @@ body{background:#080914;color:#f5f7fb}
 .brand{flex:none;gap:10px;padding:0;margin:0;color:#f5f7fb;text-decoration:none;font-size:15px}
 .brand-mark{width:36px;height:36px;border-radius:11px;background:#8b5cf6;color:#1a1026;box-shadow:0 0 22px #8b5cf655}
 .brand-name{display:block;color:#f5f7fb}
-.top-nav{display:flex;align-items:center;justify-content:center;gap:5px;min-width:0}
-.nav-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;margin:0;padding:10px 12px;border:0;border-radius:11px;background:transparent;color:#a4afc1;font-size:12px;white-space:nowrap;transition:background .16s,color .16s}
+.top-nav{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0}
+.nav-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;margin:0;padding:10px 14px;border:0;border-radius:11px;background:transparent;color:#a4afc1;font-size:12px;white-space:nowrap;transition:background .16s,color .16s;cursor:pointer}
+.nav-link span{display:inline !important}
 .nav-link.active,.nav-link:hover{background:#211735;color:#b99aff;font-weight:700}
-.nav-link svg{width:16px;height:16px}
+.nav-link svg{width:16px;height:16px;flex-shrink:0}
 .nav-account{display:flex;align-items:center;gap:14px;flex:none}
 .nav-streak{display:flex;align-items:center;gap:7px;padding:8px 12px;border:1px solid #57431d;border-radius:22px;background:#312817;color:#f8c94f;font-size:12px;font-weight:800}
 .nav-avatar .avatar{width:32px;height:32px;background:#33214e;color:#b99aff}

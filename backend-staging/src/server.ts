@@ -112,6 +112,7 @@ function localDayKey(date: Date, timeZone: string) {
 }
 function dayKey(date: Date) { return date.toISOString().slice(0, 10); }
 function dayDate(key: string) { return new Date(`${key}T00:00:00.000Z`); }
+function utcDay(date: Date) { return dayDate(dayKey(date)); }
 async function readStudyStats(userId: string) {
   const user = await prisma.user.findUnique({ where: { id: userId }, select: { timeZone: true } });
   const timeZone = user?.timeZone ?? "Asia/Kolkata";
@@ -119,20 +120,55 @@ async function readStudyStats(userId: string) {
   const yesterday = new Date(today); yesterday.setUTCDate(yesterday.getUTCDate() - 1);
   const weekStart = new Date(today); weekStart.setUTCDate(weekStart.getUTCDate() - ((weekStart.getUTCDay() + 6) % 7));
   const weekEnd = new Date(weekStart); weekEnd.setUTCDate(weekEnd.getUTCDate() + 7);
+
+  const year = today.getUTCFullYear();
+  const monthIdx = today.getUTCMonth();
+  const monthStart = new Date(Date.UTC(year, monthIdx, 1));
+  const monthEnd = new Date(Date.UTC(year, monthIdx + 1, 1));
+
   const [stored, sessions] = await Promise.all([
     prisma.studyStreak.findUnique({ where: { userId } }),
-    prisma.studySession.findMany({ where: { userId, date: { gte: weekStart, lt: weekEnd } }, select: { date: true } }),
+    prisma.studySession.findMany({ where: { userId, date: { gte: monthStart, lt: monthEnd } }, select: { date: true } }),
   ]);
   let currentStreak = stored?.currentStreak ?? 0;
   if (!stored?.lastStudyDate || stored.lastStudyDate < yesterday) currentStreak = 0;
   if (stored && currentStreak !== stored.currentStreak) await prisma.studyStreak.update({ where: { userId }, data: { currentStreak: 0 } });
   const activeDays = new Set(sessions.map(session => dayKey(session.date)));
   const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const daysInMonth = new Date(Date.UTC(year, monthIdx + 1, 0)).getUTCDate();
+  let totalDaysStudiedThisMonth = 0;
+  const month = Array.from({ length: daysInMonth }, (_, index) => {
+    const d = index + 1;
+    const date = new Date(Date.UTC(year, monthIdx, d));
+    const k = dayKey(date);
+    const active = activeDays.has(k);
+    if (active) totalDaysStudiedThisMonth++;
+    return {
+      key: k,
+      dayNumber: d,
+      dayOfWeek: labels[date.getUTCDay()],
+      active,
+      today: k === dayKey(today),
+      future: date > today
+    };
+  });
+
   const week = Array.from({ length: 7 }, (_, index) => {
     const date = new Date(weekStart); date.setUTCDate(date.getUTCDate() + index);
     return { key: dayKey(date), label: labels[date.getUTCDay()], active: activeDays.has(dayKey(date)), today: dayKey(date) === dayKey(today) };
   });
-  return { currentStreak, bestStreak: stored?.bestStreak ?? 0, week };
+
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  return {
+    currentStreak,
+    bestStreak: stored?.bestStreak ?? 0,
+    totalDaysStudiedThisMonth,
+    monthName: monthNames[monthIdx],
+    year,
+    month,
+    week
+  };
 }
 app.get("/study-stats", requireUser, async (req: AuthedRequest, res, next) => {
   try { return res.json(await readStudyStats(req.userId!)); } catch (e) { return next(e); }

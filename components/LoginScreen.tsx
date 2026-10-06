@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { ArrowRight, BookOpen, Check, Flame, Sparkles } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import Auth3DPortal from "./three/Auth3DPortal";
 
 type User = { id: string; name: string; email: string; avatar: string | null };
 type AuthResult = { user?: User; error?: string };
@@ -63,8 +64,9 @@ export default function LoginScreen({ api, onAuthenticated, error: initialError 
   }
 
   return (
-    <main className="auth-page">
-      <section className="auth-form-panel">
+    <main className="auth-page" style={{ position: "relative", overflow: "hidden" }}>
+      <Auth3DPortal />
+      <section className="auth-form-panel" style={{ position: "relative", zIndex: 1 }}>
         <header className="auth-header">
           <a className="auth-brand" href="/" aria-label="Study Together home">
             <span className="auth-brand-mark"><BookOpen size={17} strokeWidth={2.4} /></span>

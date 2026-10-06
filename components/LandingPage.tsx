@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowDown, ArrowRight, BookOpen, Flame, Map, Sparkles, Users } from "lucide-react";
 import { useEffect, useRef } from "react";
 import LandingBuddies from "./LandingBuddies";
+import Landing3DHero from "./three/Landing3DHero";
 
 const features = [
   { icon: Map, title: "A roadmap that’s yours", text: "Turn big learning goals into a day-by-day path you can actually follow." },
@@ -44,6 +45,9 @@ export default function LandingPage() {
   return (
     <main className="landing-page">
       <section className="landing-hero" id="home" ref={heroRef}>
+        <div style={{ position: "absolute", inset: 0, zIndex: 0, opacity: 0.85, pointerEvents: "none" }}>
+          <Landing3DHero />
+        </div>
         <div className="landing-art" aria-hidden="true" />
         <div className="landing-shade" aria-hidden="true" />
         <div className="landing-characters" aria-hidden="true" ref={charactersRef}>
@@ -84,14 +88,14 @@ export default function LandingPage() {
             <a href="#how-it-works">How it works</a>
             <a href="#engineers">For engineers</a>
           </nav>
-          <Link className="landing-enter landing-enter-nav" href="/login">Enter Study Room <ArrowRight size={16} /></Link>
+          <Link className="landing-enter landing-enter-nav" href="/dashboard">Enter Study Room <ArrowRight size={16} /></Link>
         </header>
 
         <div className="landing-hero-copy">
           <span className="landing-eyebrow">A SHARED SPACE FOR BIGGER GOALS</span>
           <h1>Study<br /><span>Together.</span></h1>
           <p>Your roadmap. Your pace. Your journey.</p>
-          <Link className="landing-enter landing-enter-main" href="/login">Enter Study Room <ArrowRight size={18} /></Link>
+          <Link className="landing-enter landing-enter-main" href="/dashboard">Enter Study Room <ArrowRight size={18} /></Link>
           <div className="landing-social-proof"><LandingBuddies/><span>Three journeys · One shared space</span></div>
         </div>
 
@@ -129,11 +133,11 @@ export default function LandingPage() {
       </section>
 
       <section className="landing-engineers" id="engineers">
-        <div><span className="landing-eyebrow">BUILT FOR ENGINEERS</span><h2>From first principles<br />to interview ready.</h2><p>DSA, Java, Spring, databases, and system design—organize the skills you need into a steady learning plan.</p><Link className="landing-enter landing-enter-main" href="/login">Start your roadmap <ArrowRight size={17} /></Link></div>
+        <div><span className="landing-eyebrow">BUILT FOR ENGINEERS</span><h2>From first principles<br />to interview ready.</h2><p>DSA, Java, Spring, databases, and system design—organize the skills you need into a steady learning plan.</p><Link className="landing-enter landing-enter-main" href="/dashboard">Start your roadmap <ArrowRight size={17} /></Link></div>
         <div className="landing-stack" aria-hidden="true"><span><BookOpen size={16}/> DSA</span><span><BookOpen size={16}/> Java &amp; Spring</span><span><BookOpen size={16}/> System Design</span><span><BookOpen size={16}/> Interview Prep</span></div>
       </section>
-      <section className="landing-final"><span className="landing-eyebrow">YOUR NEXT CHAPTER STARTS HERE</span><h2>Build better. Together.</h2><Link className="landing-enter landing-enter-main" href="/login">Enter Study Room <ArrowRight size={18}/></Link></section>
-      <footer className="landing-bottom"><Link className="landing-brand" href="/"><span className="landing-brand-mark"><Sparkles size={17}/></span><span>Study Together</span></Link><span>Your roadmap. Your pace. Your journey.</span><Link href="/login">Enter Study Room <ArrowRight size={14}/></Link></footer>
+      <section className="landing-final"><span className="landing-eyebrow">YOUR NEXT CHAPTER STARTS HERE</span><h2>Build better. Together.</h2><Link className="landing-enter landing-enter-main" href="/dashboard">Enter Study Room <ArrowRight size={18}/></Link></section>
+      <footer className="landing-bottom"><Link className="landing-brand" href="/"><span className="landing-brand-mark"><Sparkles size={17}/></span><span>Study Together</span></Link><span>Your roadmap. Your pace. Your journey.</span><Link href="/dashboard">Enter Study Room <ArrowRight size={14}/></Link></footer>
     </main>
   );
 }
