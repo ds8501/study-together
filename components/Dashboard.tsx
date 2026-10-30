@@ -1,14 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bell, BookOpen, Check, ChevronDown, ChevronRight, CircleHelp, Flame, LayoutDashboard, LockKeyhole, Map, Music2, Pause, Play, Plus, RotateCcw, Search, Sparkles, Timer, Trash2, Trophy, UserRound, Users, X } from "lucide-react";
+import { Bell, BookOpen, Check, ChevronDown, ChevronRight, CircleHelp, Code2, Flame, LayoutDashboard, LockKeyhole, Map, Music2, Pause, Play, Plus, RotateCcw, Search, Sparkles, Timer, Trash2, Trophy, UserRound, Users, X } from "lucide-react";
 import Universe from "./Universe";
 import WorkspaceSettings from "./WorkspaceSettings";
 import StudySessionLogger from "./StudySessionLogger";
 import RoadmapDashboard from "./RoadmapDashboard";
 import ThemeToggle from "./ThemeToggle";
 import Roadmap3DGalaxy from "./three/Roadmap3DGalaxy";
-import StudyRoom3DDesk from "./three/StudyRoom3DDesk";
+import StudyRoomClock from "./StudyRoomClock";
 import Friends3DOrbit from "./three/Friends3DOrbit";
 import Leaderboard3DPodium from "./three/Leaderboard3DPodium";
 import Settings3DIdentity from "./three/Settings3DIdentity";
@@ -32,7 +32,7 @@ const paths = { Dashboard:"/dashboard", Journey:"/journey", "My roadmap":"/roadm
 function Avatar({friend=false,name}:{friend?:boolean;name?:string}){return <div className={`avatar ${friend?"friend":""}`}>{name?name.trim().split(/\s+/).slice(0,2).map(p=>p[0]).join("").toUpperCase():friend?"AL":"DV"}</div>}
 function Sidebar({page,onNavigate,currentName,streak}:{page:string;onNavigate:(p:string)=>void;currentName:string;streak:number}) {
   const nav=[{name:"Dashboard",icon:LayoutDashboard},{name:"Roadmap",icon:Map},{name:"Study Room",icon:Timer},{name:"Friends",icon:Users},{name:"Leaderboard",icon:Trophy},{name:"Profile",icon:UserRound}];
-  return <header className="sidebar"><a className="brand" href="/dashboard" aria-label="StudyPulse dashboard"><span className="brand-mark"><Flame size={18}/></span><span className="brand-name">StudyPulse</span></a><nav className="top-nav" aria-label="Main navigation">{nav.map(({name,icon:Icon})=><button key={name} className={`nav-link ${page===name?"active":""}`} onClick={()=>onNavigate(name)}><Icon size={16}/><span>{name}</span></button>)}</nav><div className="nav-account"><ThemeToggle/><span className="nav-streak"><Flame size={15}/>{streak}</span><div className="nav-avatar"><Avatar name={currentName}/></div></div></header>
+  return <header className="sidebar"><a className="brand" href="/dashboard" aria-label="StudyPulse dashboard"><span className="brand-mark"><Flame size={18}/></span><span className="brand-name">StudyPulse</span></a><nav className="top-nav" aria-label="Main navigation">{nav.map(({name,icon:Icon})=><button key={name} className={`nav-link ${page===name?"active":""}`} onClick={()=>onNavigate(name)}><Icon size={16}/><span>{name}</span></button>)}<a className="nav-link" href="/debugging-interview"><Code2 size={16}/><span>Debugging practice</span></a></nav><div className="nav-account"><ThemeToggle/><span className="nav-streak"><Flame size={15}/>{streak}</span><div className="nav-avatar"><Avatar name={currentName}/></div></div></header>
 }
 function ProgressCard({friend,topics,currentName,friendName}:{friend?:boolean;topics:Topic[];currentName:string;friendName:string}) { const mine=topics.filter(t=>t.owner===(friend?"Alex":"Divya"));const done=mine.filter(t=>t.status==="Completed").length;const active=mine.filter(t=>t.status==="In progress").length;const total=mine.length;const pct=total?Math.round(done/total*100):0;return <div className="progress-card"><div className="card-heading"><div className="person-label"><Avatar friend={friend} name={friend?friendName:currentName}/>{friend?friendName:currentName}{!friend&&<span style={{fontSize:9,color:"#9698a2",fontWeight:400}}>You</span>}</div><span className={`progress-pill ${friend?"green":""}`}>{pct}% complete</span></div><div className="stats-row"><div className="stat-item"><div className="stat-value">{done.toString().padStart(2,"0")}</div><div className="stat-label">Completed</div></div><div className="stat-item"><div className="stat-value">{active.toString().padStart(2,"0")}</div><div className="stat-label">In progress</div></div><div className="stat-item"><div className="stat-value">{Math.max(0,total-done-active).toString().padStart(2,"0")}</div><div className="stat-label">Remaining</div></div></div><div className="progress-track"><div className={`progress-fill ${friend?"green":""}`} style={{width:`${pct}%`}}/></div></div> }
 function TopicPanel({topic,onClose,onStatus,onDelete,canDelete,onLogSession,canLog}:{topic:Topic;onClose:()=>void;onStatus:(t:Topic)=>void;onDelete:()=>void;canDelete:boolean;onLogSession:(topic:Topic,minutes:number)=>Promise<boolean>;canLog:boolean}) { return <motion.aside className="topic-panel" initial={{x:30,opacity:0}} animate={{x:0,opacity:1}} exit={{x:30,opacity:0}}><button className="icon-button close" onClick={onClose}><X size={16}/></button><div className="panel-kicker">{topic.category} · Day {topic.day}</div><h2>{topic.title}</h2><p className="panel-desc">{topic.description}</p><div className="detail-grid"><div className="detail-box"><small>Status</small><strong>{topic.status}</strong></div><div className="detail-box"><small>Difficulty</small><strong>{topic.difficulty}</strong></div><div className="detail-box"><small>Estimated time</small><strong>{topic.hours} hours</strong></div><div className="detail-box"><small>Roadmap owner</small><strong>{topic.owner}</strong></div></div><div style={{fontSize:11,color:"#888",lineHeight:1.7}}>This topic is part of <b style={{color:"#555"}}>{topic.owner}’s independent roadmap</b>. Progress here is visible to everyone in the workspace.</div>{canLog&&<StudySessionLogger onLog={minutes=>onLogSession(topic,minutes)}/>}<div className="panel-actions">{canDelete&&<button className="button-secondary" onClick={onDelete}><Trash2 size={14}/> Delete topic</button>}<button className="button-primary" onClick={()=>onStatus({...topic,status:topic.status==="Completed"?"In progress":"Completed"})}><Check size={14}/>{topic.status==="Completed"?"Reopen topic":"Mark complete"}</button></div></motion.aside> }
@@ -92,8 +92,7 @@ function StudyRoom({topics,onLog}:{topics:Topic[];onLog:(topic:Topic,minutes:num
   useEffect(()=>{if(remaining===0)setRunning(false);},[remaining]);
   const setPreset=(value:number)=>{setMinutes(value);setRemaining(value*60);setRunning(false);setMessage("");};
   const save=async()=>{const topic=mine.find(item=>String(item.id)===String(topicId));if(!topic)return;setSaving(true);const studied=Math.max(1,Math.ceil((minutes*60-remaining)/60));const ok=await onLog(topic,studied);setMessage(ok?"Session saved. Your streak is up to date.":"Could not save the session. Please try again.");setSaving(false);if(ok){setRunning(false);setRemaining(minutes*60);}};
-  const clock=`${String(Math.floor(remaining/60)).padStart(2,"0")}:${String(remaining%60).padStart(2,"0")}`;
-  return <div className="focus-page"><div className="page-heading"><div><div className="eyebrow">STUDY ROOM</div><h1>Focus mode</h1><p className="subheading">Set a goal, start the timer, and let the clock keep you honest.</p></div></div><div style={{marginBottom:20}}><StudyRoom3DDesk running={running} remaining={remaining} minutes={minutes} topicTitle={mine.find(item=>item.id===topicId)?.title}/></div><div className="focus-grid"><section className="focus-card"><label className="focus-topic-label">What are you working on?</label><select value={topicId} onChange={event=>setTopicId(event.target.value)}><option value="">Choose a roadmap topic</option>{mine.map(topic=><option key={topic.id} value={topic.id}>{topic.title}</option>)}</select><div className="focus-clock"><strong>{clock}</strong><span>{running?"FOCUSING":remaining===0?"SESSION COMPLETE":"READY"}</span></div><div className="focus-controls"><button className="button-primary" onClick={()=>{if(remaining===0)setRemaining(minutes*60);setRunning(value=>!value)}}>{running?<Pause size={16}/>:<Play size={16}/>}{running?"Pause":"Start"}</button><button className="button-secondary" onClick={()=>{setRunning(false);setRemaining(minutes*60);setMessage("")}}><RotateCcw size={15}/>Reset</button></div><div className="focus-presets">{[{label:"Pomodoro · 25m",value:25},{label:"Short break · 5m",value:5},{label:"Deep focus · 50m",value:50},{label:"Sprint · 15m",value:15}].map(preset=><button key={preset.value} className={minutes===preset.value?"selected":""} onClick={()=>setPreset(preset.value)}>{preset.label}</button>)}</div><button className="focus-save" disabled={!topicId||saving||running||remaining===minutes*60} onClick={()=>void save()}>{saving?"Saving session…":"Save focused session"}</button>{!mine.length&&<p className="focus-message">Add a topic to your roadmap to log a focus session.</p>}{message&&<p className="focus-message" role="status">{message}</p>}</section><aside className="focus-side"><section className="focus-card"><span className="focus-side-label">THIS SESSION</span><strong><Timer size={19}/>{remaining===0?"Ready to save":"Focus on one task"}</strong><p>Select a roadmap topic above, then log your session to update your streak.</p></section><section className="focus-card focus-premium-card" aria-label="Vibes, premium feature coming soon" aria-disabled="true"><span className="focus-side-label"><Music2 size={14}/> VIBES <span className="premium-lock"><LockKeyhole size={12}/> PREMIUM · COMING SOON</span></span><p>Playlist integrations are part of StudyPulse Premium and will be available later.</p><div className="focus-tags"><span>Lofi</span><span>Rain</span><span>Coffee shop</span><span>Forest</span></div></section><section className="focus-card"><span className="focus-side-label">A SMALL TIP</span><p>Pair a Pomodoro with a specific sub-task from your roadmap. Mark it done after the timer to keep your momentum going.</p></section></aside></div></div>;
+  return <div className="focus-page"><div className="page-heading"><div><div className="eyebrow">STUDY ROOM</div><h1>Focus mode</h1><p className="subheading">Set a goal, start the timer, and let the clock keep you honest.</p></div></div><StudyRoomClock running={running} remaining={remaining} minutes={minutes} topicTitle={mine.find(item=>item.id===topicId)?.title}/><div className="focus-grid"><section className="focus-card"><label className="focus-topic-label">What are you working on?</label><select value={topicId} onChange={event=>setTopicId(event.target.value)}><option value="">Choose a roadmap topic</option>{mine.map(topic=><option key={topic.id} value={topic.id}>{topic.title}</option>)}</select><div className="focus-controls"><button className="button-primary" onClick={()=>{if(remaining===0)setRemaining(minutes*60);setRunning(value=>!value)}}>{running?<Pause size={16}/>:<Play size={16}/>}{running?"Pause":"Start"}</button><button className="button-secondary" onClick={()=>{setRunning(false);setRemaining(minutes*60);setMessage("")}}><RotateCcw size={15}/>Reset</button></div><div className="focus-presets">{[{label:"Pomodoro · 25m",value:25},{label:"Short break · 5m",value:5},{label:"Deep focus · 50m",value:50},{label:"Sprint · 15m",value:15}].map(preset=><button key={preset.value} className={minutes===preset.value?"selected":""} onClick={()=>setPreset(preset.value)}>{preset.label}</button>)}</div><button className="focus-save" disabled={!topicId||saving||running||remaining===minutes*60} onClick={()=>void save()}>{saving?"Saving session…":"Save focused session"}</button>{!mine.length&&<p className="focus-message">Add a topic to your roadmap to log a focus session.</p>}{message&&<p className="focus-message" role="status">{message}</p>}</section><aside className="focus-side"><section className="focus-card"><span className="focus-side-label">THIS SESSION</span><strong><Timer size={19}/>{remaining===0?"Ready to save":"Focus on one task"}</strong><p>Select a roadmap topic above, then log your session to update your streak.</p></section><section className="focus-card focus-premium-card" aria-label="Vibes, premium feature coming soon" aria-disabled="true"><span className="focus-side-label"><Music2 size={14}/> VIBES <span className="premium-lock"><LockKeyhole size={12}/> PREMIUM · COMING SOON</span></span><p>Playlist integrations are part of StudyPulse Premium and will be available later.</p><div className="focus-tags"><span>Lofi</span><span>Rain</span><span>Coffee shop</span><span>Forest</span></div></section><section className="focus-card"><span className="focus-side-label">A SMALL TIP</span><p>Pair a Pomodoro with a specific sub-task from your roadmap. Mark it done after the timer to keep your momentum going.</p></section></aside></div></div>;
 }
 function FriendsPage({currentName,friendName,inviteCode,memberCount,onCopy}:{currentName:string;friendName:string;inviteCode?:string;memberCount:number;onCopy:()=>void}) {
   return <div className="friends-page"><div className="page-heading"><div><div className="eyebrow">FRIENDS</div><h1>Study with your crew</h1><p className="subheading">Share your invite code and keep each other moving.</p></div></div><div style={{marginBottom:20}}><Friends3DOrbit currentName={currentName} friendName={friendName} memberCount={memberCount}/></div><div className="friends-cards"><section className="friends-card"><h2>Your study partner</h2><div className="friend-profile"><Avatar friend name={friendName}/><div><strong>{friendName}</strong><small>{memberCount>1?"In your workspace":"No study partner yet"}</small></div></div><p>When a friend joins your workspace, their roadmap progress appears alongside yours.</p></section><section className="friends-card"><h2>Invite by code</h2><p>Share this code with a friend so they can join your workspace.</p><div className="invite-code-row"><strong>{inviteCode??"Invite code unavailable"}</strong><button className="button-primary" disabled={!inviteCode} onClick={onCopy}>Copy code</button></div></section></div><section className="friends-card friends-list"><h2>Your friends <span>({Math.max(0,memberCount-1)})</span></h2>{memberCount>1?<div className="friend-profile"><Avatar friend name={friendName}/><div><strong>{friendName}</strong><small>Learning alongside {currentName}</small></div><span className="friend-online-dot"/></div>:<div className="friends-empty"><Users size={25}/><p>No friends yet. Send someone your invite code to study together.</p></div>}</section></div>;
@@ -103,26 +102,49 @@ function LeaderboardPage({topics,currentName,friendName,streak,memberCount}:{top
   return <div className="leaderboard-page"><div className="page-heading"><div><div className="eyebrow">LEADERBOARD</div><h1><Trophy size={25}/> Streak champions</h1><p className="subheading">A little friendly motivation for your shared learning journey.</p></div></div><div style={{marginBottom:20}}><Leaderboard3DPodium rows={rows}/></div><section className="leaderboard-card">{rows.map((row,index)=><div className={`leaderboard-row ${index===0?"leader":""}`} key={row.name}><span className="leader-rank">{index+1}</span><Avatar friend={!row.you} name={row.name}/><div className="leader-person"><strong>{row.name}{row.you&&<small>YOU</small>}</strong><span>{row.completed} topics completed</span></div><div className="leader-score"><strong><Flame size={16}/>{row.streak??"—"}</strong><span>{row.completed} tasks</span></div></div>)}{rows.length<2&&<div className="leaderboard-empty">Invite a friend to see them here.</div>}</section></div>;
 }
 
-function generateDefaultStats(): StudyStats {
+function localDateKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function generateDefaultStats(studyDates: string[] = [], previousBest = 0): StudyStats {
   const now = new Date();
   const year = now.getFullYear();
   const monthIdx = now.getMonth();
   const daysInMonth = new Date(year, monthIdx + 1, 0).getDate();
   const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const todayDate = now.getDate();
-
-  const currentStreak = 4;
-  const bestStreak = 7;
+  const studied = new Set(studyDates);
   let activeCount = 0;
+  let bestStreak = Math.max(0, previousBest);
+  let run = 0;
+  let prior: Date | null = null;
+  for (const key of [...studied].sort()) {
+    const date = new Date(`${key}T12:00:00`);
+    run = prior && Math.round((date.getTime() - prior.getTime()) / 86400000) === 1 ? run + 1 : 1;
+    bestStreak = Math.max(bestStreak, run);
+    prior = date;
+  }
+
+  const today = localDateKey(now);
+  const yesterdayDate = new Date(now);
+  yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+  const startsOn = studied.has(today) ? now : studied.has(localDateKey(yesterdayDate)) ? yesterdayDate : null;
+  let currentStreak = 0;
+  if (startsOn) {
+    const cursor = new Date(startsOn);
+    while (studied.has(localDateKey(cursor))) {
+      currentStreak++;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+  }
 
   const month: MonthDay[] = Array.from({ length: daysInMonth }, (_, i) => {
     const d = i + 1;
     const date = new Date(year, monthIdx, d);
-    const key = `${year}-${String(monthIdx + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-    const isToday = d === todayDate;
-    const isFuture = d > todayDate;
-    const isActive = d <= todayDate && d >= Math.max(1, todayDate - currentStreak + 1);
+    const key = localDateKey(date);
+    const isToday = key === today;
+    const isFuture = date > now;
+    const isActive = studied.has(key);
     if (isActive) activeCount++;
     return {
       key,
@@ -139,10 +161,9 @@ function generateDefaultStats(): StudyStats {
   const week = Array.from({ length: 7 }, (_, i) => {
     const date = new Date(weekStart);
     date.setDate(date.getDate() + i);
-    const key = date.toISOString().slice(0, 10);
-    const isToday = date.toDateString() === now.toDateString();
-    const d = date.getDate();
-    const isActive = d <= todayDate && d >= Math.max(1, todayDate - currentStreak + 1);
+    const key = localDateKey(date);
+    const isToday = key === today;
+    const isActive = studied.has(key);
     return {
       key,
       label: labels[date.getDay()],
@@ -175,7 +196,8 @@ export default function Dashboard({
   currentEmail = "",
   workspaceName = "SDE-2 Study Room",
   memberCount = 1,
-  isAuthenticated = true
+  isAuthenticated = true,
+  authResolved = true
 }: {
   initialTopics?: Topic[];
   currentName?: string;
@@ -188,9 +210,10 @@ export default function Dashboard({
   workspaceName?: string;
   memberCount?: number;
   isAuthenticated?: boolean;
+  authResolved?: boolean;
 }) {
   const [page, setPage] = useState("Dashboard");
-  const [topics, setTopics] = useState<Topic[]>(providedTopics.length ? providedTopics : initialTopics);
+  const [topics, setTopics] = useState<Topic[]>(providedTopics.length ? providedTopics : isAuthenticated ? [] : initialTopics);
   const [studyStats, setStudyStats] = useState<StudyStats>(initialStats ?? defaultStats);
   const [selected, setSelected] = useState<Topic | null>(null);
   const [showAdd, setShowAdd] = useState(false);
@@ -200,10 +223,13 @@ export default function Dashboard({
   const [newOwner, setNewOwner] = useState<"Divya" | "Alex">("Divya");
   const [inviteCopied, setInviteCopied] = useState(false);
   const [currentInviteCode, setCurrentInviteCode] = useState(inviteCode);
+  const studyDatesKey = currentEmail ? `studypulse_study_dates:${currentEmail.trim().toLowerCase()}` : "studypulse_study_dates:preview";
 
   useEffect(() => {
     if (providedTopics && providedTopics.length > 0) {
       setTopics(providedTopics);
+    } else if (isAuthenticated) {
+      setTopics([]);
     } else if (typeof window !== "undefined") {
       try {
         const saved = localStorage.getItem("studypulse_topics");
@@ -215,23 +241,18 @@ export default function Dashboard({
         }
       } catch {}
     }
-  }, [providedTopics]);
+  }, [providedTopics, isAuthenticated]);
 
   useEffect(() => {
     if (initialStats) {
       setStudyStats(initialStats);
     } else if (typeof window !== "undefined") {
       try {
-        const saved = localStorage.getItem("studypulse_stats");
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed && typeof parsed.currentStreak === "number") {
-            setStudyStats(parsed);
-          }
-        }
+        const dates = JSON.parse(localStorage.getItem(studyDatesKey) ?? "[]");
+        setStudyStats(generateDefaultStats(Array.isArray(dates) ? dates.filter((date): date is string => typeof date === "string") : []));
       } catch {}
     }
-  }, [initialStats]);
+  }, [initialStats, studyDatesKey]);
 
   useEffect(() => {
     if (inviteCode) {
@@ -289,7 +310,20 @@ export default function Dashboard({
   };
 
   const logStudySession = async (topic: Topic, minutes: number) => {
-    let savedStats: StudyStats | null = null;
+    const today = localDateKey(new Date());
+    let studyDates: string[] = [];
+    try {
+      const storedDates = JSON.parse(localStorage.getItem(studyDatesKey) ?? "[]");
+      if (Array.isArray(storedDates)) studyDates = storedDates.filter((date): date is string => typeof date === "string");
+    } catch {}
+    if (!studyDates.includes(today)) studyDates.push(today);
+
+    // Update the dashboard immediately, then reconcile with the server response.
+    try { localStorage.setItem(studyDatesKey, JSON.stringify(studyDates)); } catch {}
+    const optimisticStats = generateDefaultStats(studyDates, studyStats.bestStreak);
+    setStudyStats(optimisticStats);
+    try { localStorage.setItem("studypulse_stats", JSON.stringify(optimisticStats)); } catch {}
+
     const idStr = topic.id != null ? String(topic.id) : "";
     const isMock = !idStr || idStr.startsWith("topic-");
 
@@ -307,39 +341,15 @@ export default function Dashboard({
         });
         if (response.ok) {
           const result = await response.json();
-          if (result.stats) savedStats = result.stats;
+          if (result.stats) {
+            setStudyStats(result.stats);
+            try { localStorage.setItem("studypulse_stats", JSON.stringify(result.stats)); } catch {}
+          }
         }
       } catch {
         // Fallback to local offline state update
       }
     }
-
-    if (savedStats) {
-      setStudyStats(savedStats);
-      try { localStorage.setItem("studypulse_stats", JSON.stringify(savedStats)); } catch {}
-      return true;
-    }
-
-    // Local state fallback update - ensures streak always increments & illuminates
-    setStudyStats(prev => {
-      const todayDate = new Date().getDate();
-      const nextMonth = (prev.month ?? []).map(d => (d.today || d.dayNumber === todayDate) ? { ...d, active: true } : d);
-      const isAlreadyActiveToday = prev.month?.some(d => (d.today || d.dayNumber === todayDate) && d.active);
-      const nextCurrent = isAlreadyActiveToday ? prev.currentStreak : prev.currentStreak + 1;
-      const nextBest = Math.max(prev.bestStreak, nextCurrent);
-      const nextWeek = prev.week.map(d => d.today ? { ...d, active: true } : d);
-      const totalStudied = (prev.totalDaysStudiedThisMonth ?? 0) + (isAlreadyActiveToday ? 0 : 1);
-      const updated: StudyStats = {
-        ...prev,
-        currentStreak: nextCurrent,
-        bestStreak: nextBest,
-        totalDaysStudiedThisMonth: totalStudied,
-        month: nextMonth,
-        week: nextWeek
-      };
-      try { localStorage.setItem("studypulse_stats", JSON.stringify(updated)); } catch {}
-      return updated;
-    });
     return true;
   };
 
@@ -441,7 +451,7 @@ export default function Dashboard({
             <Avatar name={currentName} />
             {isAuthenticated ? (
               <button className="button-secondary" onClick={logout}>Sign out</button>
-            ) : (
+            ) : authResolved ? (
               <a
                 href="/login"
                 className="button-primary"
@@ -458,11 +468,11 @@ export default function Dashboard({
               >
                 <Sparkles size={13} /> Sign in
               </a>
-            )}
+            ) : null}
           </div>
         </header>
 
-        {!isAuthenticated && (
+        {authResolved && !isAuthenticated && (
           <div
             style={{
               background: "linear-gradient(90deg, #8b5cf618 0%, #38bdf812 100%)",

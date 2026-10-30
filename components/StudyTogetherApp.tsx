@@ -3,8 +3,9 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Dashboard from "./Dashboard";
 import LoginScreen from "./LoginScreen";
+import { getApiBaseUrl } from "@/lib/api-base";
 
-const API = process.env.NODE_ENV === "production" ? "/api" : process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:4000";
+const API = getApiBaseUrl();
 type User = { id: string | number; name: string; email: string; avatar: string | null };
 type Workspace = { id: string | number; name: string; inviteCode?: string; members: Array<{ user: User; role: string }> };
 type Plan = { id: string | number; owner: { id: string | number; name: string; avatar: string | null }; topics: Array<{ id: string | number; title: string; description: string | null; dayNumber: number | null; estimatedHours: number | null; status: string; difficulty: string; category: { name: string } | null }> };
@@ -16,6 +17,8 @@ export default function StudyTogetherApp(){
   const router = useRouter();
   const pathname = usePathname();
   const [data, setData] = useState<SessionData|null>(null);
+  const [authenticatedUser, setAuthenticatedUser] = useState<User|null>(null);
+  const [authResolved, setAuthResolved] = useState(false);
   const [error, setError] = useState("");
 
   async function load(user?: User) {
@@ -41,10 +44,27 @@ export default function StudyTogetherApp(){
   }
 
   useEffect(() => {
+    // Localhost and 127.0.0.1 have separate host-only session cookies. Use
+    // one canonical dev host so a valid local session is not mistaken for a
+    // signed-out account when the app is opened through the other alias.
+    if (window.location.hostname === "localhost") {
+      const canonicalUrl = new URL(window.location.href);
+      canonicalUrl.hostname = "127.0.0.1";
+      window.location.replace(canonicalUrl.toString());
+      return;
+    }
+
     fetch(`${API}/auth/me`, { credentials: "include" })
       .then(async r => {
-        if (!r.ok) return null;
+        // Only show the signed-out preview after the API explicitly confirms
+        // there is no session. A network/API failure is not an auth result.
+        if (!r.ok) {
+          if (r.status === 401) setAuthResolved(true);
+          return null;
+        }
         const { user } = await r.json();
+        setAuthenticatedUser(user);
+        setAuthResolved(true);
         await load(user);
         return user;
       })
@@ -63,6 +83,8 @@ export default function StudyTogetherApp(){
         error={error}
         onAuthenticated={user => {
           setError("");
+          setAuthenticatedUser(user);
+          setAuthResolved(true);
           void load(user).then(() => {
             window.location.href = "/dashboard";
           });
@@ -104,15 +126,16 @@ export default function StudyTogetherApp(){
     <Dashboard
       initialTopics={topics}
       initialStats={data?.stats}
-      currentName={data?.user.name ?? "Divya Singh"}
-      currentEmail={data?.user.email ?? ""}
+      currentName={authenticatedUser?.name ?? data?.user.name ?? "Divya Singh"}
+      currentEmail={authenticatedUser?.email ?? data?.user.email ?? ""}
       friendName={friendPlan?.owner.name ?? data?.workspace.members.find(m => m.user.id !== data.user.id)?.user.name ?? "Study partner"}
       workspaceName={data?.workspace.name ?? "Study Together Room"}
       memberCount={data?.workspace.members.length ?? 1}
       api={API}
       planId={currentPlan?.id != null ? String(currentPlan.id) : undefined}
       inviteCode={data?.workspace.inviteCode}
-      isAuthenticated={!!data}
+      isAuthenticated={!!authenticatedUser}
+      authResolved={authResolved}
     />
   );
 }

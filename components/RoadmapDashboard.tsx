@@ -159,7 +159,7 @@ export default function RoadmapDashboard({ topics, onSelect, onStatus, onAdd, cu
       <div className="sync-dashboard-grid">
         <div className="sync-main-column">
           <section className="sync-mastery-card" style={{ gap: 20 }}>
-            <div style={{ width: 220, height: 200, flexShrink: 0 }}>
+            <div className="sync-mastery-visual-wrap">
               <Dashboard3DCore progress={progress} completed={completed} inProgress={inProgress} remaining={remaining} streak={streak.currentStreak} />
             </div>
             <div className="sync-mastery-copy">
