@@ -1146,7 +1146,8 @@ html[data-theme="light"] .focus-clock-today>strong small,html[data-theme="light"
 .friends-preview-foot{display:flex;justify-content:space-between;gap:5px;padding-top:12px;border-top:1px solid #ffffff12;color:#9993aa;font-size:7px}
 .friends-qr-wrap{display:grid;justify-items:center;gap:8px;color:#958ba9;font-size:8px;font-weight:800;letter-spacing:.1em}
 .invite-qr{display:block;width:116px;height:116px;padding:5px;border-radius:10px;background:#fff;box-shadow:0 8px 24px #0003}
-.friends-qr-placeholder{width:116px;height:116px;border-radius:10px;background:repeating-linear-gradient(45deg,#fff,#fff 4px,#eee 4px,#eee 8px)}
+.friends-qr-placeholder{display:grid;width:116px;height:116px;place-items:center;border:1px dashed #c8c4d2;border-radius:10px;background:#f0eef4;color:#8b8499}
+.friends-share-actions .friends-whatsapp:disabled{opacity:.48;filter:saturate(.45);cursor:not-allowed}
 html[data-theme="light"] .friends-invite-panel{border-color:#e1e7f0;background:radial-gradient(ellipse at 4% 0%,#8057e310,transparent 48%),#fff;box-shadow:0 12px 34px #2538590c}
 html[data-theme="light"] .friends-invite-main h2{color:#27344a}
 html[data-theme="light"] .friends-invite-main>p{color:#75839a}
@@ -1154,6 +1155,7 @@ html[data-theme="light"] .friends-code-box{border-color:#ddd1f4;background:#f5f0
 html[data-theme="light"] .friends-code-box>span{color:#7b699c}
 html[data-theme="light"] .friends-code-box>strong{color:#6842b9}
 html[data-theme="light"] .friends-link-row{border-color:#e1e7f0;background:#f8f9fc;color:#6f7d92}
+html[data-theme="light"] .friends-qr-placeholder{border-color:#d7dce6;background:#f4f6fa;color:#778398}
 html[data-theme="light"] .friends-share-actions>button{border-color:#dfe6ef;background:#f5f7fa;color:#46556d}
 html[data-theme="light"] .friends-invite-note{color:#748198}
 html[data-theme="light"] .friends-preview{border-color:#e5e8ef;background:linear-gradient(145deg,#f4f1fb,#f6f7fb)}
