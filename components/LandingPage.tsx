@@ -5,6 +5,7 @@ import { ArrowDown, ArrowRight, BookOpen, Flame, Map, Sparkles, Users } from "lu
 import { useEffect, useRef } from "react";
 import LandingBuddies from "./LandingBuddies";
 import Landing3DHero from "./three/Landing3DHero";
+import { APP_NAME, APP_TAGLINE } from "@/lib/brand";
 
 const features = [
   { icon: Map, title: "A roadmap that’s yours", text: "Turn big learning goals into a day-by-day path you can actually follow." },
@@ -78,9 +79,9 @@ export default function LandingPage() {
           <img className="landing-set-dressing" src="/study-table-foreground.png" alt="" />
         </div>
         <header className="landing-nav">
-          <Link className="landing-brand" href="/" aria-label="Study Together home">
+          <Link className="landing-brand" href="/" aria-label={`${APP_NAME} home`}>
             <span className="landing-brand-mark"><Sparkles size={19} /></span>
-            <span>Study Together</span>
+            <span>{APP_NAME}</span>
           </Link>
           <nav aria-label="Main navigation">
             <a className="active" href="#home">Home</a>
@@ -94,7 +95,7 @@ export default function LandingPage() {
         <div className="landing-hero-copy">
           <span className="landing-eyebrow">A SHARED SPACE FOR BIGGER GOALS</span>
           <h1>Study<br /><span>Together.</span></h1>
-          <p>Your roadmap. Your pace. Your journey.</p>
+          <p>{APP_TAGLINE}</p>
           <Link className="landing-enter landing-enter-main" href="/dashboard">Enter Study Room <ArrowRight size={18} /></Link>
           <div className="landing-social-proof"><LandingBuddies/><span>Three journeys · One shared space</span></div>
         </div>
@@ -137,7 +138,7 @@ export default function LandingPage() {
         <div className="landing-stack" aria-hidden="true"><span><BookOpen size={16}/> DSA</span><span><BookOpen size={16}/> Java &amp; Spring</span><span><BookOpen size={16}/> System Design</span><span><BookOpen size={16}/> Interview Prep</span></div>
       </section>
       <section className="landing-final"><span className="landing-eyebrow">YOUR NEXT CHAPTER STARTS HERE</span><h2>Build better. Together.</h2><Link className="landing-enter landing-enter-main" href="/dashboard">Enter Study Room <ArrowRight size={18}/></Link></section>
-      <footer className="landing-bottom"><Link className="landing-brand" href="/"><span className="landing-brand-mark"><Sparkles size={17}/></span><span>Study Together</span></Link><span>Your roadmap. Your pace. Your journey.</span><Link href="/dashboard">Enter Study Room <ArrowRight size={14}/></Link></footer>
+      <footer className="landing-bottom"><Link className="landing-brand" href="/"><span className="landing-brand-mark"><Sparkles size={17}/></span><span>{APP_NAME}</span></Link><span>{APP_TAGLINE}</span><Link href="/dashboard">Enter Study Room <ArrowRight size={14}/></Link></footer>
     </main>
   );
 }

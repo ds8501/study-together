@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { ArrowRight, BookOpen, Check, Flame, Sparkles } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import Auth3DPortal from "./three/Auth3DPortal";
+import { APP_NAME } from "@/lib/brand";
 
 type User = { id: string; name: string; email: string; avatar: string | null };
 type AuthResult = { user?: User; error?: string };
@@ -20,6 +21,11 @@ export default function LoginScreen({ api, onAuthenticated, error: initialError 
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
+    const invite = params.get("invite");
+    if (invite) {
+      setInviteCode(invite.trim());
+      setMode("register");
+    }
     const authError = params.get("authError");
     if (authError === "google") setError("Google sign-in could not be completed. Please try again or use email and password.");
     else if (authError === "google_not_configured") setError("Google sign-in is not configured yet. Please use email and password.");
@@ -119,7 +125,7 @@ export default function LoginScreen({ api, onAuthenticated, error: initialError 
 
       <aside className="auth-showcase">
         <div className="auth-orb auth-orb-one" /><div className="auth-orb auth-orb-two" />
-        <div className="auth-showcase-top"><span className="auth-brand-lockup"><span className="auth-brand-mark"><Flame size={17}/></span><strong>StudyPulse</strong></span><ThemeToggle/></div>
+        <div className="auth-showcase-top"><span className="auth-brand-lockup"><span className="auth-brand-mark"><Flame size={17}/></span><strong>{APP_NAME}</strong></span><ThemeToggle/></div>
         <div className="auth-showcase-content">
           <div className="auth-illustration" aria-hidden="true">
             <div className="auth-illustration-window"><span /><span /><span /></div>

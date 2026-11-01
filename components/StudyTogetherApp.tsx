@@ -6,11 +6,11 @@ import LoginScreen from "./LoginScreen";
 import { getApiBaseUrl } from "@/lib/api-base";
 
 const API = getApiBaseUrl();
-type User = { id: string | number; name: string; email: string; avatar: string | null };
+type User = { id: string | number; name: string; email: string; avatar: string | null; createdAt?: string | null };
 type Workspace = { id: string | number; name: string; inviteCode?: string; members: Array<{ user: User; role: string }> };
-type Plan = { id: string | number; owner: { id: string | number; name: string; avatar: string | null }; topics: Array<{ id: string | number; title: string; description: string | null; dayNumber: number | null; estimatedHours: number | null; status: string; difficulty: string; category: { name: string } | null }> };
-export type MonthDay = { key: string; dayNumber: number; dayOfWeek: string; active: boolean; today: boolean; future: boolean };
-export type StudyStats = { currentStreak: number; bestStreak: number; totalDaysStudiedThisMonth?: number; monthName?: string; year?: number; month?: MonthDay[]; week: Array<{ key: string; label: string; active: boolean; today: boolean }> };
+type Plan = { id: string | number; owner: { id: string | number; name: string; avatar: string | null }; topics: Array<{ id: string | number; title: string; description: string | null; dayNumber: number | null; order?: number; estimatedHours: number | null; status: string; difficulty: string; category: { name: string } | null }> };
+export type MonthDay = { key: string; dayNumber: number; dayOfWeek: string; active: boolean; today: boolean; future: boolean; topicsStudied?: number; minutesStudied?: number };
+export type StudyStats = { currentStreak: number; bestStreak: number; totalStudyMinutes?: number; totalDaysStudiedThisMonth?: number; monthName?: string; year?: number; month?: MonthDay[]; week: Array<{ key: string; label: string; active: boolean; today: boolean }> };
 type SessionData = { user: User; workspace: Workspace; plans: Plan[]; stats: StudyStats };
 
 export default function StudyTogetherApp(){
@@ -20,6 +20,15 @@ export default function StudyTogetherApp(){
   const [authenticatedUser, setAuthenticatedUser] = useState<User|null>(null);
   const [authResolved, setAuthResolved] = useState(false);
   const [error, setError] = useState("");
+
+  function handleProfileUpdated(user: User) {
+    setAuthenticatedUser(user);
+    setData(previous => previous ? {
+      ...previous,
+      user,
+      workspace: { ...previous.workspace, members: previous.workspace.members.map(member => String(member.user.id) === String(user.id) ? { ...member, user } : member) }
+    } : previous);
+  }
 
   async function load(user?: User) {
     try {
@@ -35,6 +44,7 @@ export default function StudyTogetherApp(){
       const stats: StudyStats = await statsRes.json();
       const current = user ?? (await fetch(`${API}/auth/me`, { credentials: "include" }).then(r => r.json())).user;
       setData({ user: current, workspace, plans, stats });
+      setError("");
       if (pathname === "/login") {
         router.replace("/dashboard");
       }
@@ -60,15 +70,22 @@ export default function StudyTogetherApp(){
         // there is no session. A network/API failure is not an auth result.
         if (!r.ok) {
           if (r.status === 401) setAuthResolved(true);
+          else {
+            setError("We couldn’t connect to your study workspace.");
+            setAuthResolved(true);
+          }
           return null;
         }
         const { user } = await r.json();
         setAuthenticatedUser(user);
-        setAuthResolved(true);
         await load(user);
+        setAuthResolved(true);
         return user;
       })
-      .catch(() => {});
+      .catch(() => {
+        setError("We couldn’t connect to your study workspace.");
+        setAuthResolved(true);
+      });
   }, []);
 
   // When on /login page
@@ -93,6 +110,14 @@ export default function StudyTogetherApp(){
     );
   }
 
+  if (!authResolved) {
+    return <main className="app-loading" role="status" aria-live="polite" aria-busy="true"><div className="skeleton-brand"/><div className="skeleton-toolbar"/><div className="skeleton-hero"><div/><div/><div/></div><div className="skeleton-content"><div/><div/><div/></div><span className="visually-hidden">Loading your study workspace…</span></main>;
+  }
+
+  if (error) {
+    return <main className="workspace-error"><div className="workspace-error-card"><span className="eyebrow">STUDY TOGETHER</span><h1>We couldn’t load your workspace</h1><p>{error}</p><button type="button" className="button-primary" onClick={() => window.location.reload()}>Try again</button></div></main>;
+  }
+
   // When on /dashboard page (or any workspace view)
   const currentPlan = data?.plans.find(p => String(p.owner.id) === String(data.user.id));
   const friendPlan = data?.plans.find(p => String(p.owner.id) !== String(data.user.id));
@@ -106,6 +131,7 @@ export default function StudyTogetherApp(){
       difficulty: t.difficulty[0] + t.difficulty.slice(1).toLowerCase(),
       hours: t.estimatedHours ?? 1,
       day: t.dayNumber ?? 1,
+      order: t.order ?? 0,
       owner: "Divya" as const,
       description: t.description ?? "A learning milestone on your personal roadmap."
     })),
@@ -117,6 +143,7 @@ export default function StudyTogetherApp(){
       difficulty: t.difficulty[0] + t.difficulty.slice(1).toLowerCase(),
       hours: t.estimatedHours ?? 1,
       day: t.dayNumber ?? 1,
+      order: t.order ?? 0,
       owner: "Alex" as const,
       description: t.description ?? "A learning milestone on your personal roadmap."
     })),
@@ -127,6 +154,8 @@ export default function StudyTogetherApp(){
       initialTopics={topics}
       initialStats={data?.stats}
       currentName={authenticatedUser?.name ?? data?.user.name ?? "Divya Singh"}
+      currentAvatar={authenticatedUser?.avatar ?? data?.user.avatar ?? null}
+      memberSince={authenticatedUser?.createdAt ?? data?.user.createdAt ?? null}
       currentEmail={authenticatedUser?.email ?? data?.user.email ?? ""}
       friendName={friendPlan?.owner.name ?? data?.workspace.members.find(m => m.user.id !== data.user.id)?.user.name ?? "Study partner"}
       workspaceName={data?.workspace.name ?? "Study Together Room"}
@@ -136,6 +165,7 @@ export default function StudyTogetherApp(){
       inviteCode={data?.workspace.inviteCode}
       isAuthenticated={!!authenticatedUser}
       authResolved={authResolved}
+      onProfileUpdated={handleProfileUpdated}
     />
   );
 }
